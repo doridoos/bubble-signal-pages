@@ -1,0 +1,253 @@
+{
+  "as_of": "2026-07-23",
+  "level": "YELLOW",
+  "staircase": true,
+  "minus_count": {
+    "6m": 0,
+    "3m": 0,
+    "2m": 1,
+    "1m": 2
+  },
+  "n_indices": 18,
+  "minus_ratio": 0.111,
+  "canary_triggered": [],
+  "canary_total": 9,
+  "taiwan_flag": false,
+  "europe_negative": [],
+  "spread_t1_t3": -16.0,
+  "returns": {
+    "나스닥": {
+      "tier": 1,
+      "6m": null,
+      "3m": null,
+      "2m": null,
+      "1m": null
+    },
+    "S&P500": {
+      "tier": 1,
+      "6m": null,
+      "3m": null,
+      "2m": null,
+      "1m": null
+    },
+    "코스피": {
+      "tier": 1,
+      "6m": 40.1,
+      "3m": 8.0,
+      "2m": -10.9,
+      "1m": -14.8
+    },
+    "대만가권": {
+      "tier": 1,
+      "6m": null,
+      "3m": null,
+      "2m": null,
+      "1m": null
+    },
+    "필라반도체": {
+      "tier": 1,
+      "6m": null,
+      "3m": null,
+      "2m": null,
+      "1m": null
+    },
+    "다우": {
+      "tier": 2,
+      "6m": null,
+      "3m": null,
+      "2m": null,
+      "1m": null
+    },
+    "닛케이": {
+      "tier": 2,
+      "6m": 24.2,
+      "3m": 13.1,
+      "2m": 5.6,
+      "1m": -4.2
+    },
+    "CSI300": {
+      "tier": 2,
+      "6m": null,
+      "3m": null,
+      "2m": null,
+      "1m": null
+    },
+    "인도니프티": {
+      "tier": 2,
+      "6m": null,
+      "3m": null,
+      "2m": null,
+      "1m": null
+    },
+    "유로스톡스50": {
+      "tier": 3,
+      "6m": null,
+      "3m": null,
+      "2m": null,
+      "1m": null
+    },
+    "DAX": {
+      "tier": 3,
+      "6m": null,
+      "3m": null,
+      "2m": null,
+      "1m": null
+    },
+    "CAC40": {
+      "tier": 3,
+      "6m": null,
+      "3m": null,
+      "2m": null,
+      "1m": null
+    },
+    "FTSE100": {
+      "tier": 3,
+      "6m": null,
+      "3m": null,
+      "2m": null,
+      "1m": null
+    },
+    "ASX200": {
+      "tier": 3,
+      "6m": 0.3,
+      "3m": 1.1,
+      "2m": 2.7,
+      "1m": 1.2
+    },
+    "브라질": {
+      "tier": 3,
+      "6m": null,
+      "3m": null,
+      "2m": null,
+      "1m": null
+    },
+    "멕시코": {
+      "tier": 3,
+      "6m": null,
+      "3m": null,
+      "2m": null,
+      "1m": null
+    },
+    "인도네시아": {
+      "tier": 3,
+      "6m": null,
+      "3m": null,
+      "2m": null,
+      "1m": null
+    },
+    "태국": {
+      "tier": 3,
+      "6m": null,
+      "3m": null,
+      "2m": null,
+      "1m": null
+    }
+  },
+  "prev_level": null,
+  "history": [
+    {
+      "date": "2026-01-30",
+      "minus_1m": 3
+    },
+    {
+      "date": "2026-02-06",
+      "minus_1m": 7
+    },
+    {
+      "date": "2026-02-13",
+      "minus_1m": 8
+    },
+    {
+      "date": "2026-02-20",
+      "minus_1m": 2
+    },
+    {
+      "date": "2026-02-27",
+      "minus_1m": 5
+    },
+    {
+      "date": "2026-03-06",
+      "minus_1m": 12
+    },
+    {
+      "date": "2026-03-13",
+      "minus_1m": 16
+    },
+    {
+      "date": "2026-03-20",
+      "minus_1m": 14
+    },
+    {
+      "date": "2026-03-27",
+      "minus_1m": 17
+    },
+    {
+      "date": "2026-04-03",
+      "minus_1m": 3
+    },
+    {
+      "date": "2026-04-10",
+      "minus_1m": 3
+    },
+    {
+      "date": "2026-04-17",
+      "minus_1m": 0
+    },
+    {
+      "date": "2026-04-24",
+      "minus_1m": 0
+    },
+    {
+      "date": "2026-05-01",
+      "minus_1m": 1
+    },
+    {
+      "date": "2026-05-08",
+      "minus_1m": 7
+    },
+    {
+      "date": "2026-05-15",
+      "minus_1m": 8
+    },
+    {
+      "date": "2026-05-22",
+      "minus_1m": 7
+    },
+    {
+      "date": "2026-05-29",
+      "minus_1m": 3
+    },
+    {
+      "date": "2026-06-05",
+      "minus_1m": 5
+    },
+    {
+      "date": "2026-06-12",
+      "minus_1m": 5
+    },
+    {
+      "date": "2026-06-19",
+      "minus_1m": 3
+    },
+    {
+      "date": "2026-06-26",
+      "minus_1m": 8
+    },
+    {
+      "date": "2026-07-03",
+      "minus_1m": 3
+    },
+    {
+      "date": "2026-07-10",
+      "minus_1m": 1
+    },
+    {
+      "date": "2026-07-17",
+      "minus_1m": 11
+    },
+    {
+      "date": "2026-07-24",
+      "minus_1m": 2
+    }
+  ]
+}
