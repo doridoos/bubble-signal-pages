@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>버블 시그널 보드</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{
+  --paper:#F2F4F6; --ink:#1A2430; --mut:#77828E; --line:#DDE3E8;
+  --sig:#D9A400; --red:#D63B2F; --reddeep:#8C1D14;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Pretendard Variable",Pretendard,-apple-system,sans-serif;
+  background:var(--paper);color:var(--ink);line-height:1.5;
+  font-variant-numeric:tabular-nums}
+.wrap{max-width:900px;margin:0 auto;padding:0 20px 60px}
+
+/* ── 시그널 스트립 ── */
+.strip{background:var(--sig);color:#fff;padding:26px 20px 22px;transition:background .4s}
+.strip .in{max-width:900px;margin:0 auto;display:flex;
+  justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:8px}
+.eyebrow{font-size:12px;letter-spacing:.14em;opacity:.85;font-weight:600}
+.level{font-size:clamp(38px,7vw,56px);font-weight:800;letter-spacing:-.02em;line-height:1.05}
+.asof{font-size:13px;opacity:.9;text-align:right}
+.delta{display:inline-block;margin-top:4px;font-size:12px;font-weight:700;
+  background:rgba(255,255,255,.22);padding:2px 10px;border-radius:99px}
+
+/* ── 핵심 수치 ── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+  background:var(--line);border:1px solid var(--line);margin-top:-1px}
+.stat{background:#fff;padding:14px 16px}
+.stat b{display:block;font-size:22px;font-weight:800}
+.stat span{font-size:11.5px;color:var(--mut)}
+.stat .warn{color:var(--sig)}
+@media(max-width:560px){.stats{grid-template-columns:repeat(2,1fr)}}
+
+h2{font-size:13px;letter-spacing:.12em;color:var(--mut);font-weight:700;
+  margin:34px 0 10px;text-transform:uppercase}
+.card{background:#fff;border:1px solid var(--line);padding:18px}
+
+/* ── B 침식 링 ── */
+.ring-wrap{display:flex;justify-content:center}
+.ring-wrap svg{width:min(480px,100%);height:auto}
+.flags{margin-top:8px;display:flex;flex-direction:column;gap:4px}
+.flag{font-size:13px;font-weight:700;color:var(--red)}
+.ring-cap{font-size:11.5px;color:var(--mut);text-align:center;margin-top:10px}
+
+/* ── A 전염 순서 히트맵 ── */
+.hm-scroll{overflow-x:auto}
+.hm-cap{font-size:11.5px;color:var(--mut);margin-top:8px}
+
+/* ── 스파크라인 ── */
+.spark-box svg{width:100%;height:88px;display:block}
+.spark-cap{font-size:11.5px;color:var(--mut);margin-top:6px}
+
+/* ── 게이지 ── */
+.gtrack{position:relative;height:14px;background:#EEF1F4;border-radius:7px;margin:10px 0 4px}
+.gbar{position:absolute;top:0;height:100%;border-radius:7px;background:var(--sig)}
+.gmark{position:absolute;top:-5px;width:2px;height:24px;background:var(--red)}
+.gcap{display:flex;justify-content:space-between;font-size:11px;color:var(--mut)}
+
+footer{margin-top:40px;font-size:11.5px;color:var(--mut);line-height:1.7}
+.stale{background:#FFF4E0;border:1px solid #E8C46B;padding:10px 14px;
+  font-size:13px;margin-top:14px;display:none}
+</style>
+</head>
+<body>
+
+<div class="strip" id="strip">
+  <div class="in">
+    <div>
+      <div class="eyebrow">글로벌 버블 전환 시그널</div>
+      <div class="level" id="levelTxt">—</div>
+      <span class="delta" id="deltaTxt" style="display:none"></span>
+    </div>
+    <div class="asof">기준일 <b id="asof">—</b><br>주 1회 판정 · 닷컴버블 프레임워크</div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="stale" id="stale">⚠ 데모 데이터 표시 중 (signal.json 미로드) — 2026.7.3 방송 표 기준 샘플</div>
+  <div class="stale" id="pastBanner" style="background:#E8EFF7;border-color:#9BB8D8">
+    🕰 과거 스냅샷 조회 중 — <a href="#" id="backLatest" style="font-weight:700">최신으로 돌아가기</a></div>
+  <div style="display:flex;justify-content:flex-end;margin-top:12px">
+    <label style="font-size:12px;color:var(--mut)">판정 회차&nbsp;
+      <select id="dateSel" style="font-family:inherit;font-size:12.5px;padding:3px 6px;
+        border:1px solid var(--line);border-radius:4px;background:#fff"></select></label>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b id="stMinus">—</b><span>-1개월 마이너스 지수</span></div>
+    <div class="stat"><b id="stStair">—</b><span>계단식 확산</span></div>
+    <div class="stat"><b id="stCanary">—</b><span>카나리아 발동 (T3)</span></div>
+    <div class="stat"><b id="stSpread">—</b><span>쏠림 스프레드 T1−T3</span></div>
+  </div>
+
+  <h2>침식 링 — 주변부에서 중심으로</h2>
+  <div class="card">
+    <div class="ring-wrap"><svg id="ring" viewBox="0 0 480 480"></svg></div>
+    <div class="flags" id="flags"></div>
+    <div class="ring-cap">빨간 점 = -1개월 마이너스 전환 (진할수록 일찍 전환) ·
+      점선 화살 = 중심 방향 침식 · <b>빨강이 T1 핵심에 닿을수록 붕괴 진행</b></div>
+  </div>
+
+  <h2>전염 순서 히트맵 — 확산 전선</h2>
+  <div class="card">
+    <div class="hm-scroll" id="hm"></div>
+    <div class="hm-cap">열 정렬: 건강한 지수 ← 왼쪽 · 오른쪽 → 먼저 감염된 지수
+      (1차: 첫 전환 시점, 2차: 마이너스 구간 수, 3차: -1M 강도) ·
+      검은 실선 = <b>확산 전선</b> — 매주 왼쪽으로 전진하면 확산 진행 중 ·
+      전선 왼쪽 인접 지수 = 다음 전환 후보</div>
+  </div>
+
+  <h2>마이너스 지수 수 추이 — 최근 26주</h2>
+  <div class="card spark-box"><svg id="spark" preserveAspectRatio="none"></svg>
+    <div class="spark-cap">계단처럼 우상향하면 확산 진행 중 · -1개월 트레일링 기준</div>
+  </div>
+
+  <h2>쏠림 스프레드</h2>
+  <div class="card">
+    <div style="font-size:13px">주도(T1) 평균 −1M 수익률 − 주변부(T3) 평균 · <b id="gval">—</b></div>
+    <div class="gtrack"><div class="gbar" id="gbar"></div><div class="gmark" id="gmark"></div></div>
+    <div class="gcap"><span>-20%p (주도부가 먼저 하락)</span><span>0</span><span>+20%p (닷컴형 압착 · 15%p RED 조건)</span></div>
+  </div>
+
+  <footer>
+    참고 지표 자동화 시스템 — 투자 판단의 자동화가 아님. 신영증권 리서치센터
+    프레임워크(닷컴버블 2000.3 고점 전 국가별 마이너스 계단식 확산) 기반,
+    '네 가지 신호' 중 1개 구현. 최종 판단은 항상 수동.
+  </footer>
+</div>
+
+<script>
+const LEVELS={GREEN:"#1E9E5A",YELLOW:"#D9A400",ORANGE:"#E07020",RED:"#D63B2F"};
+const KR={GREEN:"관망",YELLOW:"주의",ORANGE:"경고",RED:"위험"};
+const WIN=["6m","3m","2m","1m"];
+const WL={"6m":"-6개월","3m":"-3개월","2m":"-2개월","1m":"-1개월"};
+
+/* ── 데모 데이터 (2026.7.3 방송 표 기반) — signal.json 로드 실패 시 ── */
+const DEMO={as_of:"2026-07-03",level:"YELLOW",prev_level:"GREEN",staircase:true,
+ minus_count:{"6m":3,"3m":4,"2m":4,"1m":8},n_indices:20,
+ canary_triggered:["멕시코","인도네시아"],canary_total:10,taiwan_flag:false,
+ europe_negative:[],spread_t1_t3:-5.8,
+ returns:{
+  "나스닥":{tier:1,"6m":11.2,"3m":18.1,"2m":2.9,"1m":-3.8},
+  "S&P500":{tier:1,"6m":9.1,"3m":13.7,"2m":3.5,"1m":-0.9},
+  "코스피":{tier:1,"6m":87.7,"3m":50.4,"2m":22.6,"1m":-8.1},
+  "대만가권":{tier:1,"6m":59.4,"3m":43.6,"2m":20.2,"1m":0.7},
+  "필라반도체":{tier:1,"6m":18.0,"3m":22.0,"2m":1.5,"1m":-6.5},
+  "다우":{tier:2,"6m":9.3,"3m":13.8,"2m":6.9,"1m":4.4},
+  "닛케이":{tier:2,"6m":38.5,"3m":31.3,"2m":17.2,"1m":2.0},
+  "CSI300":{tier:2,"6m":4.6,"3m":9.0,"2m":0.7,"1m":-2.0},
+  "항셍테크":{tier:2,"6m":-21.6,"3m":-3.8,"2m":-7.6,"1m":-11.0},
+  "인도니프티":{tier:2,"6m":-7.8,"3m":6.9,"2m":1.1,"1m":3.7},
+  "유로스톡스50":{tier:3,"6m":9.6,"3m":12.6,"2m":9.0,"1m":5.9},
+  "DAX":{tier:3,"6m":4.2,"3m":10.4,"2m":5.3,"1m":3.2},
+  "CAC40":{tier:3,"6m":3.8,"3m":6.9,"2m":4.8,"1m":4.4},
+  "FTSE100":{tier:3,"6m":7.3,"3m":2.3,"2m":3.0,"1m":3.4},
+  "ASX200":{tier:3,"6m":1.3,"3m":3.1,"2m":1.3,"1m":0.7},
+  "브라질":{tier:3,"6m":8.4,"3m":-7.4,"2m":-7.1,"1m":2.2},
+  "멕시코":{tier:3,"6m":4.6,"3m":-3.8,"2m":-1.2,"1m":-1.8},
+  "인도네시아":{tier:3,"6m":-32.8,"3m":-16.4,"2m":-15.5,"1m":-1.1},
+  "태국":{tier:3,"6m":27.9,"3m":10.8,"2m":7.9,"1m":1.5},
+  "베트남":{tier:3,"6m":4.3,"3m":10.6,"2m":0.4,"1m":2.4}},
+ history:[2,2,3,2,3,3,4,3,4,4,5,4,5,5,6,5,6,7,6,7,7,8,7,8,8,8]
+   .map((v,i)=>({date:"W"+(i+1),minus_1m:v}))};
+
+/* 첫 마이너스 전환 시점: 0=-6M부터 … 3=-1M에서, 4=아직 플러스 */
+function firstNeg(R,n){for(let i=0;i<4;i++){if(R[n][WIN[i]]!=null&&R[n][WIN[i]]<0)return i}return 4}
+function negCount(R,n){return WIN.filter(w=>R[n][w]!=null&&R[n][w]<0).length}
+
+function render(d,isDemo){
+  const R=d.returns;
+  const sig=LEVELS[d.level]||LEVELS.YELLOW;
+  document.documentElement.style.setProperty("--sig",sig);
+  document.getElementById("strip").style.background=sig;
+  document.getElementById("levelTxt").textContent=d.level+" · "+(KR[d.level]||"");
+  document.getElementById("asof").textContent=d.as_of;
+  if(isDemo)document.getElementById("stale").style.display="block";
+  if(d.prev_level&&d.prev_level!==d.level){
+    const el=document.getElementById("deltaTxt");
+    el.style.display="inline-block";el.textContent="전주 "+d.prev_level+" → 변경";}
+
+  document.getElementById("stMinus").innerHTML=
+    `<span class="warn">${d.minus_count["1m"]}</span>/${d.n_indices}`;
+  document.getElementById("stStair").textContent=d.staircase?"YES ⚠":"NO";
+  document.getElementById("stCanary").textContent=
+    d.canary_triggered.length+"/"+d.canary_total;
+  document.getElementById("stSpread").textContent=
+    (d.spread_t1_t3>0?"+":"")+d.spread_t1_t3+"%p";
+
+  /* ═══ B 침식 링 ═══ */
+  (function(){
+    const cx=240,cy=240,rings={3:190,2:126,1:64};
+    let s=`<circle cx="${cx}" cy="${cy}" r="${rings[3]}" fill="none" stroke="#DDE3E8" stroke-width="1.5"/>
+      <circle cx="${cx}" cy="${cy}" r="${rings[2]}" fill="none" stroke="#DDE3E8" stroke-width="1.5"/>
+      <circle cx="${cx}" cy="${cy}" r="${rings[1]}" fill="none" stroke="#DDE3E8" stroke-width="1.5"/>
+      <circle cx="${cx}" cy="${cy}" r="14" fill="#1A2430"/>
+      <text x="${cx}" y="${cy-206}" font-size="11" text-anchor="middle" fill="#77828E">T3 주변부 · 카나리아</text>
+      <text x="${cx}" y="${cy-140}" font-size="11" text-anchor="middle" fill="#77828E">T2 준주도</text>
+      <text x="${cx}" y="${cy-78}" font-size="11" text-anchor="middle" fill="#77828E">T1 주도</text>`;
+    [1,2,3].forEach(t=>{
+      const grp=Object.keys(R).filter(n=>R[n].tier===t);
+      grp.forEach((n,i)=>{
+        const a=-Math.PI/2+i*2*Math.PI/grp.length+(t===2?0.3:0);
+        const x=cx+rings[t]*Math.cos(a),y=cy+rings[t]*Math.sin(a);
+        const fn=firstNeg(R,n),neg=R[n]["1m"]!=null&&R[n]["1m"]<0;
+        const fill=neg?`rgba(214,59,47,${[0.95,0.8,0.62,0.48][fn]||0.48})`:"#fff";
+        const stroke=neg?"#8C1D14":"#B8C2CC";
+        s+=`<circle cx="${x}" cy="${y}" r="13" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`;
+        if(neg){
+          const x2=cx+(rings[t]-30)*Math.cos(a),y2=cy+(rings[t]-30)*Math.sin(a);
+          s+=`<line x1="${x}" y1="${y}" x2="${x2}" y2="${y2}"
+            stroke="rgba(214,59,47,.55)" stroke-width="2.5" stroke-dasharray="3 3"/>`;}
+        const lx=cx+(rings[t]+(t===1?-32:24))*Math.cos(a),
+              ly=cy+(rings[t]+(t===1?-32:24))*Math.sin(a);
+        s+=`<text x="${lx}" y="${ly+3.5}" font-size="${t===1?11:10.5}" text-anchor="middle"
+          font-weight="${neg?800:500}" fill="${neg?"#8C1D14":"#4A5560"}">${n}</text>`;});
+    });
+    s+=`<text x="${cx}" y="${cy+4}" font-size="9" text-anchor="middle" fill="#fff" font-weight="800">핵심</text>`;
+    document.getElementById("ring").innerHTML=s;
+    const fl=document.getElementById("flags");
+    fl.innerHTML="";
+    if(d.taiwan_flag)fl.insertAdjacentHTML("beforeend",
+      `<div class="flag">🚩 대만 마이너스 전환 — 닷컴 '마지막 관문' 플래그 발동</div>`);
+    if(d.europe_negative&&d.europe_negative.length)fl.insertAdjacentHTML("beforeend",
+      `<div class="flag">🇪🇺 유럽 마이너스: ${d.europe_negative.join(", ")}${d.europe_negative.length>=3?" — 카나리아 임계":""}</div>`);
+  })();
+
+  /* ═══ A 전염 순서 히트맵 (방송 방향: 건강 왼쪽 → 감염 오른쪽) ═══ */
+  (function(){
+    const sorted=Object.keys(R).sort((a,b)=>
+      (firstNeg(R,b)-firstNeg(R,a))            /* 늦게/미전환 왼쪽, 일찍 전환 오른쪽 */
+      ||(negCount(R,a)-negCount(R,b))          /* 마이너스 구간 적은 쪽 왼쪽 */
+      ||(R[b]["1m"]-R[a]["1m"]));              /* -1M 수익률 높은 쪽 왼쪽 */
+    const CW=42,CH=40,LX=76,RX=52;
+    const w=LX+sorted.length*CW+RX,h=34+WIN.length*CH+18;
+    let s=`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="min-width:${w}px;display:block">`;
+    sorted.forEach((n,i)=>{
+      const x=LX+i*CW+CW/2;
+      const neg=R[n]["1m"]!=null&&R[n]["1m"]<0;
+      s+=`<text x="${x}" y="26" font-size="10" text-anchor="end"
+        transform="rotate(-42 ${x} 26)" fill="${neg?"#8C1D14":"#4A5560"}"
+        font-weight="${neg?800:500}">${n}</text>`;});
+    s+=`<text x="${LX+sorted.length*CW+RX-8}" y="26" font-size="10.5" text-anchor="end"
+      font-weight="700" fill="#77828E">마이너스</text>`;
+    WIN.forEach((wn,r)=>{
+      s+=`<text x="${LX-8}" y="${34+r*CH+CH/2+4}" font-size="11.5" text-anchor="end"
+        font-weight="700">${WL[wn]}</text>`;
+      sorted.forEach((n,c)=>{
+        const v=R[n][wn];
+        if(v==null){s+=`<text x="${LX+c*CW+CW/2}" y="${34+r*CH+CH/2+4}"
+          font-size="10" text-anchor="middle" fill="#B8C2CC">·</text>`;return;}
+        const neg=v<0;
+        const fill=neg?`rgba(214,59,47,${Math.min(.25+Math.abs(v)/35,.9)})`:"#EDF1F4";
+        s+=`<rect x="${LX+c*CW+1}" y="${34+r*CH+1}" width="${CW-2}" height="${CH-2}"
+          rx="3" fill="${fill}"/>
+          <text x="${LX+c*CW+CW/2}" y="${34+r*CH+CH/2+4}" font-size="9.5"
+          text-anchor="middle" fill="${neg?"#fff":"#9AA5B0"}"
+          font-weight="${neg?800:400}">${v>0?"+":""}${v.toFixed(1)}</text>`;});
+      s+=`<text x="${LX+sorted.length*CW+RX-14}" y="${34+r*CH+CH/2+5}" font-size="14"
+        text-anchor="end" font-weight="800" fill="#D63B2F">${d.minus_count[wn]}</text>`;});
+    /* 확산 전선: 오른쪽 끝에서 마이너스 수만큼 왼쪽 지점, 행별 계단 */
+    let path="";
+    WIN.forEach((wn,r)=>{
+      const cnt=sorted.filter(n=>R[n][wn]!=null&&R[n][wn]<0).length;
+      const x=LX+(sorted.length-cnt)*CW,y1=34+r*CH,y2=34+(r+1)*CH;
+      path+=(r===0?`M${x} ${y1} `:`L${x} ${y1} `)+`L${x} ${y2} `;});
+    s+=`<path d="${path}" fill="none" stroke="#1A2430" stroke-width="2.5" stroke-linejoin="round"/>`;
+    const lastCnt=sorted.filter(n=>R[n]["1m"]!=null&&R[n]["1m"]<0).length;
+    s+=`<text x="${LX+(sorted.length-lastCnt)*CW-8}" y="${34+3.5*CH+4}" font-size="11"
+      font-weight="800" text-anchor="end" fill="#1A2430">확산 전선 →</text>`;
+    s+="</svg>";
+    document.getElementById("hm").innerHTML=s;
+  })();
+
+  /* ═══ 스파크라인 ═══ */
+  (function(){
+    const h=d.history||[],W2=700,H2=88,max=d.n_indices;
+    if(h.length<2)return;
+    const pts=h.map((p,i)=>
+      `${(i/(h.length-1))*W2},${H2-6-(p.minus_1m/max)*(H2-16)}`).join(" ");
+    const last=h[h.length-1],ly=H2-6-(last.minus_1m/max)*(H2-16);
+    const sp=document.getElementById("spark");
+    sp.setAttribute("viewBox",`0 0 ${W2} ${H2}`);
+    sp.innerHTML=`<polyline points="${pts}" fill="none" stroke="${sig}" stroke-width="2.5"/>
+      <circle cx="${W2}" cy="${ly}" r="4" fill="${sig}"/>
+      <text x="${W2-8}" y="${ly-8}" font-size="12" font-weight="700"
+        fill="${sig}" text-anchor="end">${last.minus_1m}</text>`;
+  })();
+
+  /* ═══ 게이지 ═══ */
+  (function(){
+    const s2=Math.max(-20,Math.min(20,d.spread_t1_t3));
+    const mid=50,pct=mid+s2/20*50;
+    const bar=document.getElementById("gbar");
+    if(s2>=0){bar.style.left=mid+"%";bar.style.width=(pct-mid)+"%";}
+    else{bar.style.left=pct+"%";bar.style.width=(mid-pct)+"%";}
+    document.getElementById("gmark").style.left=(mid+15/20*50)+"%";
+    document.getElementById("gval").textContent=(s2>0?"+":"")+d.spread_t1_t3+"%p";
+  })();
+}
+
+function loadSnapshot(date){
+  const isLatest=!date;
+  const url=isLatest?"signal.json":`archive/${date}.json`;
+  fetch(url).then(r=>{if(!r.ok)throw 0;return r.json()})
+    .then(d=>{
+      render(d,false);
+      document.getElementById("stale").style.display="none";
+      document.getElementById("pastBanner").style.display=isLatest?"none":"block";
+    })
+    .catch(()=>{if(isLatest){render(DEMO,true);
+      document.getElementById("pastBanner").style.display="none";}});
+}
+
+/* 회차 목록 로드 → 드롭다운 구성 */
+fetch("archive_list.json").then(r=>{if(!r.ok)throw 0;return r.json()})
+  .then(dates=>{
+    const sel=document.getElementById("dateSel");
+    sel.innerHTML=`<option value="">최신</option>`+
+      dates.map(d=>`<option value="${d}">${d}</option>`).join("");
+    sel.onchange=()=>loadSnapshot(sel.value||null);
+  })
+  .catch(()=>{document.getElementById("dateSel").parentElement.style.display="none";});
+
+document.getElementById("pastBanner").style.display="none";
+document.getElementById("backLatest").onclick=(e)=>{e.preventDefault();
+  document.getElementById("dateSel").value="";loadSnapshot(null);};
+
+loadSnapshot(null);
+</script>
+</body>
+</html>
